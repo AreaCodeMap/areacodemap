@@ -75,8 +75,7 @@ class _ContactListPageState extends State<ContactListPage> {
   Future<PermissionStatus> _getContactPermission() async {
     PermissionStatus permission = await PermissionHandler()
         .checkPermissionStatus(PermissionGroup.contacts);
-    if (permission != PermissionStatus.granted &&
-        permission != PermissionStatus.denied) {
+    if (permission != PermissionStatus.granted && permission != PermissionStatus.neverAskAgain) {
       Map<PermissionGroup, PermissionStatus> permissionStatus =
       await PermissionHandler()
           .requestPermissions([PermissionGroup.contacts]);

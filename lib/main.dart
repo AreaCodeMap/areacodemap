@@ -144,6 +144,7 @@ class _ContactListPageState extends State<ContactListPage> {
           itemCount: _contacts?.length ?? 0,
           itemBuilder: (BuildContext context, int index) {
             Contact c = _contacts?.elementAt(index);
+            int areaCode = parseAreaCode(c);
             return ListTile(
               onTap: () {
                 Navigator.of(context).push(MaterialPageRoute(
@@ -156,7 +157,7 @@ class _ContactListPageState extends State<ContactListPage> {
               leading: (c.avatar != null && c.avatar.length > 0)
                   ? CircleAvatar(backgroundImage: MemoryImage(c.avatar))
                   : CircleAvatar(child: Text(c.initials())),
-              title: Text(c.displayName ?? ""),
+              title: Text(areaCode.toString() ?? ""),
             );
           },
         )
@@ -165,6 +166,17 @@ class _ContactListPageState extends State<ContactListPage> {
         ),
       ),
     );
+  }
+
+  int parseAreaCode(Contact c) {
+    if (c.phones.length == 0) return 999;
+    String number = c.phones.elementAt(0).value;
+    number = number.replaceAll(RegExp("\\(|\\)|\\+\\d\\-*|\\s+|\\-|1\\s"), "");
+    if (number.length > 10) {
+      number = number.substring(1);
+    }
+    int areaCode = int.parse(number.substring(0,3));
+    return areaCode;
   }
 
   void contactOnDeviceHasBeenUpdated(Contact contact) {

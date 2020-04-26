@@ -30,6 +30,8 @@ class ContactListPage extends StatefulWidget {
 
 class _ContactListPageState extends State<ContactListPage> {
   List<Contact> _contacts;
+  Map<int, List<Contact>> areaCodeCount = Map<int, List<Contact>>();
+  Map<Contact, int> contactAreaCodeLookup = Map<Contact, int>();
 
   @override
   initState() {
@@ -57,9 +59,36 @@ class _ContactListPageState extends State<ContactListPage> {
           setState(() => contact.avatar = avatar);
         });
       }
+      updateAreaCodes();
     } else {
       _handleInvalidPermissions(permissionStatus);
     }
+  }
+
+  updateAreaCodes() {
+    for (Contact c in _contacts) {
+      int areaCode = parseAreaCode(c);
+      contactAreaCodeLookup[c] = areaCode;
+    }
+  }
+
+  int parseAreaCode(Contact c) {
+    if (c.phones.length == 0) return 999;
+    String number = c.phones.elementAt(0).value;
+    number = number.replaceAll(RegExp("\\(|\\)|\\+\\d\\-*|\\s+|\\-|1\\s"), "");
+    if (number.length > 10) {
+      number = number.substring(1);
+    }
+    int areaCode = int.parse(number.substring(0, 3));
+    groupContactsByAreaCode(areaCode, c);
+    return areaCode;
+  }
+
+  void groupContactsByAreaCode(int areaCode, Contact c) {
+    if (!areaCodeCount.containsKey(areaCode)) {
+      areaCodeCount[areaCode] = List<Contact>();
+    }
+    areaCodeCount[areaCode].add(c);
   }
 
   updateContact() async {
@@ -75,10 +104,11 @@ class _ContactListPageState extends State<ContactListPage> {
   Future<PermissionStatus> _getContactPermission() async {
     PermissionStatus permission = await PermissionHandler()
         .checkPermissionStatus(PermissionGroup.contacts);
-    if (permission != PermissionStatus.granted && permission != PermissionStatus.neverAskAgain) {
+    if (permission != PermissionStatus.granted &&
+        permission != PermissionStatus.neverAskAgain) {
       Map<PermissionGroup, PermissionStatus> permissionStatus =
-      await PermissionHandler()
-          .requestPermissions([PermissionGroup.contacts]);
+          await PermissionHandler()
+              .requestPermissions([PermissionGroup.contacts]);
       return permissionStatus[PermissionGroup.contacts] ??
           PermissionStatus.unknown;
     } else {
@@ -141,42 +171,30 @@ class _ContactListPageState extends State<ContactListPage> {
       body: SafeArea(
         child: _contacts != null
             ? ListView.builder(
-          itemCount: _contacts?.length ?? 0,
-          itemBuilder: (BuildContext context, int index) {
-            Contact c = _contacts?.elementAt(index);
-            int areaCode = parseAreaCode(c);
-            return ListTile(
-              onTap: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (BuildContext context) => ContactDetailsPage(
-                      c,
-                      onContactDeviceSave:
-                      contactOnDeviceHasBeenUpdated,
-                    )));
-              },
-              leading: (c.avatar != null && c.avatar.length > 0)
-                  ? CircleAvatar(backgroundImage: MemoryImage(c.avatar))
-                  : CircleAvatar(child: Text(c.initials())),
-              title: Text(areaCode.toString() ?? ""),
-            );
-          },
-        )
+                itemCount: _contacts?.length ?? 0,
+                itemBuilder: (BuildContext context, int index) {
+                  Contact c = _contacts?.elementAt(index);
+                  return ListTile(
+                    onTap: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (BuildContext context) => ContactDetailsPage(
+                                c,
+                                onContactDeviceSave:
+                                    contactOnDeviceHasBeenUpdated,
+                              )));
+                    },
+                    leading: (c.avatar != null && c.avatar.length > 0)
+                        ? CircleAvatar(backgroundImage: MemoryImage(c.avatar))
+                        : CircleAvatar(child: Text(c.initials())),
+                    title: Text(contactAreaCodeLookup[c].toString() ?? ""),
+                  );
+                },
+              )
             : Center(
-          child: CircularProgressIndicator(),
-        ),
+                child: CircularProgressIndicator(),
+              ),
       ),
     );
-  }
-
-  int parseAreaCode(Contact c) {
-    if (c.phones.length == 0) return 999;
-    String number = c.phones.elementAt(0).value;
-    number = number.replaceAll(RegExp("\\(|\\)|\\+\\d\\-*|\\s+|\\-|1\\s"), "");
-    if (number.length > 10) {
-      number = number.substring(1);
-    }
-    int areaCode = int.parse(number.substring(0,3));
-    return areaCode;
   }
 
   void contactOnDeviceHasBeenUpdated(Contact contact) {
@@ -308,32 +326,32 @@ class AddressesTile extends StatelessWidget {
         Column(
           children: _addresses
               .map((a) => Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Column(
-              children: <Widget>[
-                ListTile(
-                  title: Text("Street"),
-                  trailing: Text(a.street ?? ""),
-                ),
-                ListTile(
-                  title: Text("Postcode"),
-                  trailing: Text(a.postcode ?? ""),
-                ),
-                ListTile(
-                  title: Text("City"),
-                  trailing: Text(a.city ?? ""),
-                ),
-                ListTile(
-                  title: Text("Region"),
-                  trailing: Text(a.region ?? ""),
-                ),
-                ListTile(
-                  title: Text("Country"),
-                  trailing: Text(a.country ?? ""),
-                ),
-              ],
-            ),
-          ))
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                      children: <Widget>[
+                        ListTile(
+                          title: Text("Street"),
+                          trailing: Text(a.street ?? ""),
+                        ),
+                        ListTile(
+                          title: Text("Postcode"),
+                          trailing: Text(a.postcode ?? ""),
+                        ),
+                        ListTile(
+                          title: Text("City"),
+                          trailing: Text(a.city ?? ""),
+                        ),
+                        ListTile(
+                          title: Text("Region"),
+                          trailing: Text(a.region ?? ""),
+                        ),
+                        ListTile(
+                          title: Text("Country"),
+                          trailing: Text(a.country ?? ""),
+                        ),
+                      ],
+                    ),
+                  ))
               .toList(),
         ),
       ],
@@ -357,13 +375,13 @@ class ItemsTile extends StatelessWidget {
           children: _items
               .map(
                 (i) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: ListTile(
-                title: Text(i.label ?? ""),
-                trailing: Text(i.value ?? ""),
-              ),
-            ),
-          )
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: ListTile(
+                    title: Text(i.label ?? ""),
+                    trailing: Text(i.value ?? ""),
+                  ),
+                ),
+              )
               .toList(),
         ),
       ],
@@ -427,13 +445,13 @@ class _AddContactPageState extends State<AddContactPage> {
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Phone'),
                 onSaved: (v) =>
-                contact.phones = [Item(label: "mobile", value: v)],
+                    contact.phones = [Item(label: "mobile", value: v)],
                 keyboardType: TextInputType.phone,
               ),
               TextFormField(
                 decoration: const InputDecoration(labelText: 'E-mail'),
                 onSaved: (v) =>
-                contact.emails = [Item(label: "work", value: v)],
+                    contact.emails = [Item(label: "work", value: v)],
                 keyboardType: TextInputType.emailAddress,
               ),
               TextFormField(
@@ -548,13 +566,13 @@ class _UpdateContactsPageState extends State<UpdateContactsPage> {
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Phone'),
                 onSaved: (v) =>
-                contact.phones = [Item(label: "mobile", value: v)],
+                    contact.phones = [Item(label: "mobile", value: v)],
                 keyboardType: TextInputType.phone,
               ),
               TextFormField(
                 decoration: const InputDecoration(labelText: 'E-mail'),
                 onSaved: (v) =>
-                contact.emails = [Item(label: "work", value: v)],
+                    contact.emails = [Item(label: "work", value: v)],
                 keyboardType: TextInputType.emailAddress,
               ),
               TextFormField(

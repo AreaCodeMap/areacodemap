@@ -77,7 +77,7 @@ class _ContactListPageState extends State<ContactListPage> {
     String number = c.phones.elementAt(0).value;
     number = number.replaceAll(RegExp("\\(|\\)|\\+\\d\\-*|\\s+|\\-|1\\s"), "");
     if (number.length > 10) {
-      number = number.substring(1);
+      number = number.substring(1);   //If number has an extra 1 in front (eg: 1510-123-4567)
     }
     int areaCode = int.parse(number.substring(0, 3));
     groupContactsByAreaCode(areaCode, c);

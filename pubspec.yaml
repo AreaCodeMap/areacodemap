@@ -20,6 +20,7 @@ dependencies:
   flutter:
     sdk: flutter
 
+  google_maps_flutter: ^0.5.27+3
   contacts_service: ^0.4.4
   permission_handler: ^4.4.0
   intl: ^0.16.1

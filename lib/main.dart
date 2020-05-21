@@ -1,4 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import 'dart:convert';
+import 'dart:io';
+
+import '.env.dart';
+
+import 'package:contacts_service/contacts_service.dart';
+import 'package:intl/intl.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 void main() => runApp(ContactsExampleApp());
@@ -45,6 +56,9 @@ class _TestMapPolylineState extends State<TestMapPolyline> {
     latlngSegment1.add(_lat5);
     latlngSegment1.add(_lat6);
     latlngSegment1.add(_lat1);
+
+    print("testing");
+
   }
 
   @override

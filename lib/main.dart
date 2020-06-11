@@ -100,7 +100,7 @@ class _TestMapPolylineState extends State<TestMapPolyline> {
         fillColor: Color.fromARGB(30, 209, 90, 90),
         points: latlngSegment1,
         strokeColor: Color.fromARGB(0, 209, 90, 90),
-
+        onTap: () => { print("test") }
       ));
     });
   }
